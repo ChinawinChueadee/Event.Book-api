@@ -1,0 +1,4 @@
+@base_url = http://localhost:5005
+
+###GET 
+GET {{base_url}}/auth
