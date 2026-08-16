@@ -2,3 +2,28 @@
 
 ###GET 
 GET {{base_url}}/auth
+
+
+###POST Register
+POST {{base_url}}/auth/register
+Content-Type: application/json
+
+{
+    "email" : "chin@gmail.com",
+    "username" : "chin",
+    "password" : "123456",
+    "confirmPassword" : "123456"
+}
+
+###POST Login
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+    "email" : "chin@gmail.com",
+    "password" : "123456"
+}
+
+###GET By ID
+GET {{base_url}}/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzg2ODY5MTUzLCJleHAiOjE3ODgxNjUxNTN9.btgR1KG6YvhZanfKDAZeNp8DkiazuKKJ7zAr-R7UOkc
