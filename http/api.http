@@ -1,8 +1,5 @@
 @base_url = http://localhost:5005
-
-###GET 
-GET {{base_url}}/auth
-
+@userToken = {{userLogin.response.body.token}}
 
 ###POST Register
 POST {{base_url}}/auth/register
@@ -16,6 +13,7 @@ Content-Type: application/json
 }
 
 ###POST Login
+# @name userLogin
 POST {{base_url}}/auth/login
 Content-Type: application/json
 
@@ -24,6 +22,119 @@ Content-Type: application/json
     "password" : "123456"
 }
 
+### POST Logout
+POST {{base_url}}/auth/logout
+Authorization: Bearer {{userToken}}
+
+
+### PATCH Update My Profile
+PATCH {{base_url}}/users/me
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+    "username": "chin_new"
+}
+
 ###GET By ID
-GET {{base_url}}/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzg2ODY5MTUzLCJleHAiOjE3ODgxNjUxNTN9.btgR1KG6YvhZanfKDAZeNp8DkiazuKKJ7zAr-R7UOkc
+GET {{base_url}}/users/me
+Authorization: Bearer {{userToken}}
+
+
+###POST event
+POST {{base_url}}/events
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+    "title": "Workshop Node.js",
+    "category": "Tech",
+    "status": "OPEN",
+    "eventDate": "2026-09-01",
+  "location": "Bangkok",
+  "capacity": 20
+}
+
+###GET All event
+GET {{base_url}}/events
+
+
+###GET My event
+GET {{base_url}}/events/me
+Authorization: Bearer {{userToken}}
+
+
+### GET Event By Id
+GET {{base_url}}/events/3
+
+### PATCH Update Event
+PATCH {{base_url}}/events/3
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+    "title": "Workshop Node.js (Updated)",
+    "capacity": 30
+}
+
+###DELETE event
+DELETE {{base_url}}/events/2
+Authorization: Bearer {{userToken}}
+
+
+### POST Create Booking
+POST {{base_url}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+    "eventId": 3
+}
+
+### GET My Bookings
+GET {{base_url}}/bookings/me
+Authorization: Bearer {{userToken}}
+
+### GET Booking By Id
+GET {{base_url}}/bookings/1
+Authorization: Bearer {{userToken}}
+
+### PATCH Update Booking (ยกเลิกการจอง)
+PATCH {{base_url}}/bookings/1
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+    "status": "PENDING"
+}
+
+### PATCH Cancel Booking
+PATCH {{base_url}}/bookings/1/cancel
+Authorization: Bearer {{userToken}}
+
+### PATCH Cancel Booking
+PATCH {{base_url}}/bookings/1/cancel
+Authorization: Bearer {{userToken}}
+
+### GET Bookings of My Event
+GET {{base_url}}/events/3/bookings
+Authorization: Bearer {{userToken}}
+
+
+
+
+
+### Search by keyword
+GET {{base_url}}/events/search?keyword=Node
+
+### Filter by category
+GET {{base_url}}/events/search?category=Tech
+
+### Filter by status + location
+GET {{base_url}}/events/search?status=OPEN&location=Bangkok
+
+### Filter by date range
+GET {{base_url}}/events/search?startDate=2026-09-01&endDate=2026-12-31
+
+### Combine multiple filters
+GET {{base_url}}/events/search?keyword=Workshop&category=Tech&status=OPEN
