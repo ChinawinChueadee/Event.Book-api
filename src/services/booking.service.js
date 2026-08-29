@@ -56,3 +56,9 @@ export const findBookingsByEvent = async (eventId) => {
     orderBy: { bookedAt: "desc" },
   });
 };
+
+export const findBookingByUserAndEvent = async (userId, eventId) => {
+  return await prisma.booking.findUnique({
+    where: { userId_eventId: { userId, eventId } }, // ชื่อ compound key ที่ Prisma generate จาก @@unique([userId, eventId])
+  });
+};

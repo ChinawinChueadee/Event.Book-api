@@ -5,7 +5,17 @@ export const createEvent = async (data) => {
 };
 
 export const findAllEvents = async () => {
-  return await prisma.event.findMany();
+  return await prisma.event.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+        },
+      },
+    },
+  });
 };
 
 export const findEventById = async (id) => {

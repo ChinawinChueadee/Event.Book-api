@@ -12,6 +12,7 @@ import {
   findBookingById,
   cancelBookingById,
   findBookingByIdWithEvent,
+  findBookingByUserAndEvent,
 } from "../services/booking.service.js";
 
 export async function bookingCreate(req, res, next) {
@@ -32,11 +33,23 @@ export async function bookingCreate(req, res, next) {
       return next(createHttpError[400]("Event is full"));
     }
 
-    const booking = await createBooking({
-      status: "PENDING",
-      userId: req.user.id,
-      eventId: data.eventId,
-    });
+    // ✅ เช็คก่อนว่ามี booking เดิม (รวมที่ cancelled) อยู่ไหม
+    const existing = await findBookingByUserAndEvent(req.user.id, data.eventId);
+
+    let booking;
+    if (existing) {
+      if (existing.status !== "CANCELLED") {
+        return next(createHttpError[409]("You already booked this event"));
+      }
+      // เคย cancel ไปแล้ว → reactivate แทนการสร้างใหม่
+      booking = await updateBookingById(existing.id, { status: "PENDING" });
+    } else {
+      booking = await createBooking({
+        status: "PENDING",
+        userId: req.user.id,
+        eventId: data.eventId,
+      });
+    }
 
     res.status(201).json({
       message: "Booking created successfully",

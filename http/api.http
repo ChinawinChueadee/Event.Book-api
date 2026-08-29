@@ -47,10 +47,10 @@ Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-    "title": "Workshop Node.js",
+    "title": "Workshop Programing",
     "category": "Tech",
     "status": "OPEN",
-    "eventDate": "2026-09-01",
+    "eventDate": "2026-08-25",
   "location": "Bangkok",
   "capacity": 20
 }
@@ -73,8 +73,8 @@ Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-    "title": "Workshop Node.js (Updated)",
-    "capacity": 30
+    "eventImage": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=800&auto=format&fit=crop"
+
 }
 
 ###DELETE event

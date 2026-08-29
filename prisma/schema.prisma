@@ -36,13 +36,14 @@ enum EventStatus {
 }
 
 model Event {
-  id        Int         @id @default(autoincrement())
-  title     String
-  category  String
-  status    EventStatus @default(OPEN)
-  eventDate DateTime
-  location  String
-  capacity  Int
+  id         Int         @id @default(autoincrement())
+  title      String
+  category   String
+  status     EventStatus @default(OPEN)
+  eventImage String?
+  eventDate  DateTime
+  location   String
+  capacity   Int
 
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int

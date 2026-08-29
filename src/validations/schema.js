@@ -52,6 +52,7 @@ export const createEventSchema = z.object({
   capacity: z
     .number({ message: "capacity is required" })
     .positive("capacity must be greater than 0"),
+  eventImage: z.string().url("eventImage must be a valid URL").optional(),
 });
 
 export const updateEventSchema = z
@@ -59,6 +60,7 @@ export const updateEventSchema = z
     title: z.string().min(2, "title is required"),
     category: z.string().min(2, "category is required"),
     status: z.string().min(2, "status is required"),
+    eventImage: z.string().url().optional(),
     eventDate: z.coerce.date({ message: "eventDate must be a valid date" }),
     location: z.string().min(2, "location is required"),
     capacity: z
