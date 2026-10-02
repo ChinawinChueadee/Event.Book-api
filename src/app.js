@@ -4,7 +4,10 @@ import createHttpError from "http-errors";
 import userRoute from "./routes/users.route.js";
 import eventRoute from "./routes/events.route.js";
 import bookingRoute from "./routes/bookings.route.js";
+import hostRoute from "./routes/host.route.js";
+import adminRoute from "./routes/admin.route.js";
 import cors from "cors";
+import errorMiddleware from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -26,17 +29,14 @@ app.use("/events", eventRoute);
 
 app.use("/bookings", bookingRoute);
 
+app.use("/host", hostRoute);
+
+app.use("/admin", adminRoute);
+
 app.use((req, res, next) => {
   return next(createHttpError.NotFound());
 });
 
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500);
-  res.json({
-    status: err.status || 500,
-    message: err.message || "Internal Server Error",
-  });
-});
+app.use(errorMiddleware);
 
 export default app;

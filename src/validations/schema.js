@@ -1,16 +1,8 @@
-import { email, z } from "zod";
-import bcrypt from "bcryptjs";
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { z } from "zod";
 
 export const registerSchema = z
   .object({
-    email: z
-      .string()
-      .min(2, "Email require")
-      .refine((value) => emailRegex.test(value), {
-        message: "must be a valid email",
-      }),
+    email: z.email("must be a valid email"),
     username: z.string().min(2, "username is required"),
     password: z.string().min(4, "password at least 4 characters"),
     confirmPassword: z.string().min(1, "confirm password is required"),
@@ -18,33 +10,16 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "confirmPassword must match password",
     path: ["confirmPassword"],
-  })
-  .transform(async (data) => {
-    const output = {
-      email: data.email,
-      username: data.username,
-      password: await bcrypt.hash(data.password, 8),
-    };
-    return output;
   });
 
-export const loginSchema = z
-  .object({
-    email: z
-      .string()
-      .min(2, "Email require")
-      .refine((value) => emailRegex.test(value), {
-        message: "gmail must be a valid email",
-      }),
-    password: z.string().min(4, "password at least 4 characters"),
-  })
-  .transform((data) => ({
-    email: data.email,
-    password: data.password,
-  }));
+export const loginSchema = z.object({
+  email: z.email("must be a valid email"),
+  password: z.string().min(4, "password at least 4 characters"),
+});
 
 export const createEventSchema = z.object({
   title: z.string().min(2, "title is required"),
+  description: z.string().optional(),
   category: z.string().min(2, "category is required"),
   status: z.enum(["OPEN", "CLOSED", "CANCELLED"]).optional(),
   eventDate: z.coerce.date({ message: "eventDate must be a valid date" }),
@@ -52,15 +27,18 @@ export const createEventSchema = z.object({
   capacity: z
     .number({ message: "capacity is required" })
     .positive("capacity must be greater than 0"),
-  eventImage: z.string().url("eventImage must be a valid URL").optional(),
+  eventImage: z.url("eventImage must be a valid URL").optional(),
 });
 
 export const updateEventSchema = z
   .object({
     title: z.string().min(2, "title is required"),
+    description: z.string().optional(),
     category: z.string().min(2, "category is required"),
-    status: z.string().min(2, "status is required"),
-    eventImage: z.string().url().optional(),
+    status: z.enum(["OPEN", "CLOSED", "CANCELLED"], {
+      message: "status must be OPEN, CLOSED or CANCELLED",
+    }),
+    eventImage: z.url("eventImage must be a valid URL").optional(),
     eventDate: z.coerce.date({ message: "eventDate must be a valid date" }),
     location: z.string().min(2, "location is required"),
     capacity: z
@@ -74,22 +52,52 @@ export const createBookingSchema = z.object({
 });
 
 export const updateBookingSchema = z.object({
-  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED"], {
-    message: "status must be PENDING, CONFIRMED or CANCELLED",
+  status: z.enum(["CONFIRMED", "CANCELLED"], {
+    message: "status must be CONFIRMED or CANCELLED",
   }),
 });
 
 export const updateProfileSchema = z
   .object({
     username: z.string().min(2, "username must be at least 2 characters"),
+    profileImage: z.url("profileImage must be a valid URL"),
   })
   .partial();
 
+const paginationShape = {
+  page: z.coerce
+    .number()
+    .int()
+    .positive("page must be greater than 0")
+    .optional(),
+  limit: z.coerce
+    .number()
+    .int()
+    .positive("limit must be greater than 0")
+    .max(100, "limit must be at most 100")
+    .optional(),
+};
+
 export const searchEventSchema = z.object({
-  keyword: z.string().optional(),
+  ...paginationShape,
+  search: z.string().optional(),
   category: z.string().optional(),
-  status: z.string().optional(),
+  date: z.coerce.date({ message: "date must be a valid date" }).optional(),
+  status: z.enum(["OPEN", "CLOSED", "CANCELLED"]).optional(),
   location: z.string().optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+});
+
+export const adminBookingQuerySchema = z.object({
+  ...paginationShape,
+  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED"]).optional(),
+  eventId: z.coerce.number().int().positive().optional(),
+  userId: z.coerce.number().int().positive().optional(),
+});
+
+export const adminUserQuerySchema = z.object({
+  ...paginationShape,
+  role: z.enum(["USER", "ADMIN"]).optional(),
+  search: z.string().optional(),
 });
