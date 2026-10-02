@@ -12,7 +12,13 @@ export async function updateProfile(req, res, next) {
 
     const updatedUser = await updateUserById(req.user.id, data);
 
-    const { password, createdAt, ...userData } = updatedUser;
+    const {
+      password,
+      createdAt,
+      resetToken,
+      resetTokenExpiresAt,
+      ...userData
+    } = updatedUser;
 
     res.json({
       message: "Profile updated successfully",

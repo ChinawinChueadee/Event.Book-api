@@ -20,7 +20,13 @@ export default async function (req, res, next) {
     throw createHttpError[401]("Unauthorized");
   }
 
-  const { password, createdAt, ...userData } = foundUser;
+  const {
+    password,
+    createdAt,
+    resetToken,
+    resetTokenExpiresAt,
+    ...userData
+  } = foundUser;
   req.user = userData;
   next();
 }

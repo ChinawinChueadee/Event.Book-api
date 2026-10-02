@@ -21,6 +21,12 @@ export const deleteUserById = async (id) => {
   return await prisma.user.delete({ where: { id } });
 };
 
+export const findUserByResetToken = async (hashedToken) => {
+  return await prisma.user.findFirst({
+    where: { resetToken: hashedToken, resetTokenExpiresAt: { gt: new Date() } },
+  });
+};
+
 export const findAllUsers = async (filters, paging) => {
   const where = {};
   if (filters.role) where.role = filters.role;
@@ -34,7 +40,7 @@ export const findAllUsers = async (filters, paging) => {
   const [users, total] = await prisma.$transaction([
     prisma.user.findMany({
       where,
-      omit: { password: true },
+      omit: { password: true, resetToken: true, resetTokenExpiresAt: true },
       include: { _count: { select: { events: true, bookings: true } } },
       orderBy: { createdAt: "desc" },
       ...paging,

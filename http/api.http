@@ -23,6 +23,24 @@ Content-Type: application/json
     "password" : "123456"
 }
 
+### POST Forgot Password (dev: response มี resetUrl)
+POST {{base_url}}/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email" : "chin@gmail.com"
+}
+
+### POST Reset Password (token จาก resetUrl)
+POST {{base_url}}/auth/reset-password
+Content-Type: application/json
+
+{
+    "token" : "paste-token-here",
+    "password" : "123456",
+    "confirmPassword" : "123456"
+}
+
 ### POST Logout
 POST {{base_url}}/auth/logout
 Authorization: Bearer {{userToken}}
@@ -55,12 +73,15 @@ Authorization: Bearer {{userToken}}
 {
     "title": "Workshop Programing",
     "description": "Hands-on Node.js workshop",
-    "category": "Tech",
+    "category": "TECH",
     "status": "OPEN",
     "eventDate": "2026-08-25",
   "location": "Bangkok",
   "capacity": 20
 }
+
+###GET Categories (ใช้ทำ dropdown / ตัวกรอง)
+GET {{base_url}}/categories
 
 ###GET All event
 GET {{base_url}}/events
@@ -149,6 +170,20 @@ GET {{base_url}}/events?search=Workshop&category=Tech&date=2026-08-25
 GET {{base_url}}/events?page=1&limit=10
 
 
+### POST Upload Image (jpg / png / webp, ไม่เกิน 5MB) → { url }
+# เอา url ที่ได้ไปใส่ eventImage หรือ profileImage
+POST {{base_url}}/uploads/image
+Authorization: Bearer {{userToken}}
+Content-Type: multipart/form-data; boundary=EBS
+
+--EBS
+Content-Disposition: form-data; name="image"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+< ./photo.jpg
+--EBS--
+
+
 ### ===== ADMIN =====
 
 ### POST Admin Login (จาก seed)
@@ -169,6 +204,19 @@ Authorization: Bearer {{adminToken}}
 GET {{base_url}}/admin/users?search=chin&page=1&limit=20
 Authorization: Bearer {{adminToken}}
 
+### PATCH Change user role
+PATCH {{base_url}}/admin/users/2
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+    "role": "ADMIN"
+}
+
+### DELETE User (ลบ event + booking ของ user ด้วย)
+DELETE {{base_url}}/admin/users/3
+Authorization: Bearer {{adminToken}}
+
 ### PATCH Admin closes any event
 PATCH {{base_url}}/events/3
 Content-Type: application/json
@@ -177,3 +225,29 @@ Authorization: Bearer {{adminToken}}
 {
     "status": "CLOSED"
 }
+
+### GET All Categories (admin: มี id + จำนวน event)
+GET {{base_url}}/admin/categories
+Authorization: Bearer {{adminToken}}
+
+### POST Create Category (เก็บเป็นตัวพิมพ์ใหญ่)
+POST {{base_url}}/admin/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "food"
+}
+
+### PATCH Rename Category (event ที่ใช้หมวดนี้เปลี่ยนตามอัตโนมัติ)
+PATCH {{base_url}}/admin/categories/6
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "food_drink"
+}
+
+### DELETE Category (ลบไม่ได้ถ้ายังมี event ใช้อยู่ → 409)
+DELETE {{base_url}}/admin/categories/6
+Authorization: Bearer {{adminToken}}

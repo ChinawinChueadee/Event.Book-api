@@ -8,34 +8,48 @@ datasource db {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  username     String
-  email        String    @unique
-  password     String
-  profileImage String?
-  role         Role      @default(USER)
-  createdAt    DateTime  @default(now()) @map("createAt")
-  bookings     Booking[]
-  events       Event[]
+  id                  Int       @id @default(autoincrement())
+  username            String
+  email               String    @unique
+  password            String
+  profileImage        String?
+  role                Role      @default(USER)
+  // forgot password: เก็บเป็น hash ของ token + เวลาหมดอายุ
+  resetToken          String?   @unique
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime  @default(now()) @map("createAt")
+  bookings            Booking[]
+  events              Event[]
 }
 
 model Event {
-  id         Int         @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   title       String
   description String?     @db.Text
-  category   String
-  status     EventStatus @default(OPEN)
-  eventDate  DateTime
-  location   String
-  capacity   Int
-  userId     Int
-  createdAt  DateTime    @default(now()) @map("createAt")
-  updatedAt  DateTime    @updatedAt
-  eventImage String?
-  bookings   Booking[]
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String
+  status      EventStatus @default(OPEN)
+  eventDate   DateTime
+  location    String
+  capacity    Int
+  userId      Int
+  createdAt   DateTime    @default(now()) @map("createAt")
+  updatedAt   DateTime    @updatedAt
+  eventImage  String?
+  bookings    Booking[]
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // เก็บชื่อหมวดใน Event.category ตรง ๆ — เปลี่ยนชื่อหมวดแล้ว event ตามไปเอง, ลบหมวดที่ยังมี event ใช้ไม่ได้
+  categoryRef Category    @relation(fields: [category], references: [name], onUpdate: Cascade, onDelete: Restrict)
 
   @@index([userId], map: "Event_userId_fkey")
+  @@index([category])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
 }
 
 model Booking {
