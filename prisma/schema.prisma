@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -12,11 +7,6 @@ datasource db {
   provider = "mysql"
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
   id           Int       @id @default(autoincrement())
   username     String
@@ -24,9 +14,47 @@ model User {
   password     String
   profileImage String?
   role         Role      @default(USER)
-  createAt     DateTime  @default(now())
-  events       Event[]
+  createdAt    DateTime  @default(now()) @map("createAt")
   bookings     Booking[]
+  events       Event[]
+}
+
+model Event {
+  id         Int         @id @default(autoincrement())
+  title       String
+  description String?     @db.Text
+  category   String
+  status     EventStatus @default(OPEN)
+  eventDate  DateTime
+  location   String
+  capacity   Int
+  userId     Int
+  createdAt  DateTime    @default(now()) @map("createAt")
+  updatedAt  DateTime    @updatedAt
+  eventImage String?
+  bookings   Booking[]
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "Event_userId_fkey")
+}
+
+model Booking {
+  id        Int           @id @default(autoincrement())
+  status    BookingStatus @default(PENDING)
+  userId    Int
+  eventId   Int
+  bookedAt  DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId], map: "Booking_eventId_fkey")
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 enum EventStatus {
@@ -35,39 +63,8 @@ enum EventStatus {
   CANCELLED
 }
 
-model Event {
-  id         Int         @id @default(autoincrement())
-  title      String
-  category   String
-  status     EventStatus @default(OPEN)
-  eventImage String?
-  eventDate  DateTime
-  location   String
-  capacity   Int
-
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId Int
-
-  createAt  DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
-}
-
 enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
-}
-
-model Booking {
-  id        Int           @id @default(autoincrement())
-  status    BookingStatus @default(PENDING)
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId   Int
-  bookedAt  DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  @@unique([userId, eventId])
 }

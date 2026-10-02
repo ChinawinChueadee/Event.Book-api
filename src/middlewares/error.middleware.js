@@ -2,7 +2,6 @@ import { z, ZodError } from "zod";
 
 export default (err, req, res, next) => {
   if (err instanceof ZodError) {
-    console.log(err.flatten());
     return res.status(400).json({
       message: "Validation Error",
       errors: z.flattenError(err).fieldErrors,
@@ -20,6 +19,10 @@ export default (err, req, res, next) => {
       error: "Invalid Token",
       message: "The provided token is invalid or malformed.",
     });
+  }
+
+  if (!err.status || err.status >= 500) {
+    console.error(err);
   }
 
   res.status(err.status || 500);

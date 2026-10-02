@@ -4,52 +4,19 @@ import {
   updateBookingSchema,
 } from "../validations/schema.js";
 import {
-  findEventById,
-  countBookingByEvent,
-  createBooking,
+  bookEvent,
   findBookingsByUser,
   updateBookingById,
   findBookingById,
   cancelBookingById,
   findBookingByIdWithEvent,
-  findBookingByUserAndEvent,
 } from "../services/booking.service.js";
 
 export async function bookingCreate(req, res, next) {
   try {
     const data = await createBookingSchema.parseAsync(req.body);
 
-    const event = await findEventById(data.eventId);
-    if (!event) {
-      return next(createHttpError[404]("Event not found"));
-    }
-
-    if (event.userId === req.user.id) {
-      return next(createHttpError[403]("You cannot book your own event"));
-    }
-
-    const bookedCount = await countBookingByEvent(data.eventId);
-    if (bookedCount >= event.capacity) {
-      return next(createHttpError[400]("Event is full"));
-    }
-
-    // ✅ เช็คก่อนว่ามี booking เดิม (รวมที่ cancelled) อยู่ไหม
-    const existing = await findBookingByUserAndEvent(req.user.id, data.eventId);
-
-    let booking;
-    if (existing) {
-      if (existing.status !== "CANCELLED") {
-        return next(createHttpError[409]("You already booked this event"));
-      }
-      // เคย cancel ไปแล้ว → reactivate แทนการสร้างใหม่
-      booking = await updateBookingById(existing.id, { status: "PENDING" });
-    } else {
-      booking = await createBooking({
-        status: "PENDING",
-        userId: req.user.id,
-        eventId: data.eventId,
-      });
-    }
+    const booking = await bookEvent(req.user.id, data.eventId);
 
     res.status(201).json({
       message: "Booking created successfully",
@@ -82,13 +49,20 @@ export async function bookingUpdate(req, res, next) {
 
     const data = await updateBookingSchema.parseAsync(req.body);
 
-    const booking = await findBookingById(id);
+    const booking = await findBookingByIdWithEvent(id);
     if (!booking) {
       return next(createHttpError[404]("Booking not found"));
     }
 
-    if (booking.userId !== req.user.id) {
-      return next(createHttpError[403]("You can only update your own booking"));
+    // only the event host can confirm or reject a booking
+    if (booking.event.userId !== req.user.id && req.user.role !== "ADMIN") {
+      return next(
+        createHttpError[403]("Only the event host can update this booking"),
+      );
+    }
+
+    if (booking.status === "CANCELLED") {
+      return next(createHttpError[400]("Booking already cancelled"));
     }
 
     const updatedBooking = await updateBookingById(id, data);
@@ -153,7 +127,11 @@ export async function getById(req, res, next) {
       return next(createHttpError[404]("Booking not found"));
     }
 
-    if (booking.userId !== req.user.id) {
+    const canView =
+      booking.userId === req.user.id ||
+      booking.event.userId === req.user.id ||
+      req.user.role === "ADMIN";
+    if (!canView) {
       return next(createHttpError[403]("You can only view your own booking"));
     }
 

@@ -1,5 +1,6 @@
 @base_url = http://localhost:5005
 @userToken = {{userLogin.response.body.token}}
+@adminToken = {{adminLogin.response.body.token}}
 
 ###POST Register
 POST {{base_url}}/auth/register
@@ -33,11 +34,16 @@ Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-    "username": "chin_new"
+    "username": "chin_new",
+    "profileImage": "https://www.svgrepo.com/show/420364/avatar-male-man.svg"
 }
 
 ###GET By ID
 GET {{base_url}}/users/me
+Authorization: Bearer {{userToken}}
+
+### DELETE My Profile (ลบ event + booking ของตัวเองด้วย)
+DELETE {{base_url}}/users/me
 Authorization: Bearer {{userToken}}
 
 
@@ -48,6 +54,7 @@ Authorization: Bearer {{userToken}}
 
 {
     "title": "Workshop Programing",
+    "description": "Hands-on Node.js workshop",
     "category": "Tech",
     "status": "OPEN",
     "eventDate": "2026-08-25",
@@ -60,7 +67,7 @@ GET {{base_url}}/events
 
 
 ###GET My event
-GET {{base_url}}/events/me
+GET {{base_url}}/host/me/events
 Authorization: Bearer {{userToken}}
 
 
@@ -68,12 +75,12 @@ Authorization: Bearer {{userToken}}
 GET {{base_url}}/events/3
 
 ### PATCH Update Event
-PATCH {{base_url}}/events/3
+PATCH {{base_url}}/events/4
 Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-    "eventImage": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=800&auto=format&fit=crop"
+    "eventImage": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop"
 
 }
 
@@ -99,18 +106,14 @@ Authorization: Bearer {{userToken}}
 GET {{base_url}}/bookings/1
 Authorization: Bearer {{userToken}}
 
-### PATCH Update Booking (ยกเลิกการจอง)
+### PATCH Update Booking (เจ้าของ event confirm / reject)
 PATCH {{base_url}}/bookings/1
 Content-Type: application/json
 Authorization: Bearer {{userToken}}
 
 {
-    "status": "PENDING"
+    "status": "CONFIRMED"
 }
-
-### PATCH Cancel Booking
-PATCH {{base_url}}/bookings/1/cancel
-Authorization: Bearer {{userToken}}
 
 ### PATCH Cancel Booking
 PATCH {{base_url}}/bookings/1/cancel
@@ -120,21 +123,57 @@ Authorization: Bearer {{userToken}}
 GET {{base_url}}/events/3/bookings
 Authorization: Bearer {{userToken}}
 
+### GET My Event Statistics
+GET {{base_url}}/events/3/stats
+Authorization: Bearer {{userToken}}
 
-
-
-
-### Search by keyword
-GET {{base_url}}/events/search?keyword=Node
+### Search by keyword (title / description / location)
+GET {{base_url}}/events?search=Node
 
 ### Filter by category
-GET {{base_url}}/events/search?category=Tech
+GET {{base_url}}/events?category=Tech
+
+### Filter by date (ทั้งวัน)
+GET {{base_url}}/events?date=2026-08-25
 
 ### Filter by status + location
-GET {{base_url}}/events/search?status=OPEN&location=Bangkok
+GET {{base_url}}/events?status=OPEN&location=Bangkok
 
 ### Filter by date range
-GET {{base_url}}/events/search?startDate=2026-09-01&endDate=2026-12-31
+GET {{base_url}}/events?startDate=2026-09-01&endDate=2026-12-31
 
 ### Combine multiple filters
-GET {{base_url}}/events/search?keyword=Workshop&category=Tech&status=OPEN
+GET {{base_url}}/events?search=Workshop&category=Tech&date=2026-08-25
+
+### Pagination
+GET {{base_url}}/events?page=1&limit=10
+
+
+### ===== ADMIN =====
+
+### POST Admin Login (จาก seed)
+# @name adminLogin
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+    "email" : "admin@gmail.com",
+    "password" : "123456"
+}
+
+### GET All Bookings (filter: status, eventId, userId)
+GET {{base_url}}/admin/bookings?status=PENDING&page=1&limit=20
+Authorization: Bearer {{adminToken}}
+
+### GET All Users (filter: role, search)
+GET {{base_url}}/admin/users?search=chin&page=1&limit=20
+Authorization: Bearer {{adminToken}}
+
+### PATCH Admin closes any event
+PATCH {{base_url}}/events/3
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+    "status": "CLOSED"
+}

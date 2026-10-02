@@ -1,21 +1,18 @@
 import { prisma } from "../libs/prisma.js";
 
-export const createEvent = async (data) => {
-  return await prisma.event.create({ data });
+const hostSelect = {
+  select: { id: true, username: true, email: true },
 };
 
-export const findAllEvents = async () => {
-  return await prisma.event.findMany({
-    include: {
-      user: {
-        select: {
-          id: true,
-          username: true,
-          email: true,
-        },
-      },
-    },
-  });
+// count only active bookings (not cancelled)
+const activeBookingCount = {
+  _count: {
+    select: { bookings: { where: { status: { not: "CANCELLED" } } } },
+  },
+};
+
+export const createEvent = async (data) => {
+  return await prisma.event.create({ data });
 };
 
 export const findEventById = async (id) => {
@@ -25,7 +22,8 @@ export const findEventById = async (id) => {
 export const findEventsByUser = async (userId) => {
   return await prisma.event.findMany({
     where: { userId },
-    orderBy: { createAt: "desc" },
+    include: activeBookingCount,
+    orderBy: { createdAt: "desc" },
   });
 };
 
@@ -43,21 +41,18 @@ export const updateEventById = async (id, data) => {
 export const findEventByIdWithCount = async (id) => {
   return await prisma.event.findUnique({
     where: { id },
-    include: {
-      _count: {
-        select: { bookings: true },
-      },
-    },
+    include: { user: hostSelect, ...activeBookingCount },
   });
 };
 
-export const searchEvents = async (filters) => {
+export const searchEvents = async (filters, paging = {}) => {
   const where = {};
 
-  if (filters.keyword) {
+  if (filters.search) {
     where.OR = [
-      { title: { contains: filters.keyword } },
-      { location: { contains: filters.keyword } },
+      { title: { contains: filters.search } },
+      { description: { contains: filters.search } },
+      { location: { contains: filters.search } },
     ];
   }
 
@@ -73,14 +68,27 @@ export const searchEvents = async (filters) => {
     where.location = { contains: filters.location };
   }
 
-  if (filters.startDate || filters.endDate) {
+  if (filters.date) {
+    // match the whole day of the given date
+    const start = new Date(filters.date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    where.eventDate = { gte: start, lt: end };
+  } else if (filters.startDate || filters.endDate) {
     where.eventDate = {};
     if (filters.startDate) where.eventDate.gte = filters.startDate;
     if (filters.endDate) where.eventDate.lte = filters.endDate;
   }
 
-  return await prisma.event.findMany({
-    where,
-    orderBy: { eventDate: "asc" },
-  });
+  const [events, total] = await prisma.$transaction([
+    prisma.event.findMany({
+      where,
+      include: { user: hostSelect, ...activeBookingCount },
+      orderBy: { eventDate: "asc" },
+      ...paging,
+    }),
+    prisma.event.count({ where }),
+  ]);
+  return { events, total };
 };
