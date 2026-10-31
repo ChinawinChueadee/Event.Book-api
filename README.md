@@ -29,6 +29,7 @@ npx prisma migrate resolve --applied 0_init
 |---|---|
 | `DATABASE_URL` | Used by Prisma CLI (migrate / seed) |
 | `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_USER` / `DATABASE_PASSWORD` / `DATABASE_NAME` | Used by the app at runtime |
+| `DATABASE_SSL` / `DATABASE_SSL_CA` | Set `DATABASE_SSL=true` for hosted MySQL that requires TLS (e.g. Aiven). Put the provider's CA certificate in `DATABASE_SSL_CA` (newlines as `\n`) to verify the server; without it the connection is encrypted but the certificate is not checked |
 | `PORT` | API port (web expects `5005`) |
 | `JWT_SECRET` | Required — the server will not start without it |
 | `CORS_ORIGIN` | Allowed origins, comma separated (default `http://localhost:5173`) |
